@@ -1,9 +1,9 @@
 package org.example.t1academyhome08.controller;
 
-import org.example.t1academyhome08.dto.ApiResponse;
-import org.example.t1academyhome08.dto.OperationActionRequest;
-import org.example.t1academyhome08.dto.ReserveLimitRequest;
-import org.example.t1academyhome08.dto.UserLimitResponse;
+import org.example.t1academyhome08.dto.ApiResponseDTO;
+import org.example.t1academyhome08.dto.OperationActionRequestDTO;
+import org.example.t1academyhome08.dto.ReserveLimitRequestDTO;
+import org.example.t1academyhome08.dto.UserLimitResponseDTO;
 import org.example.t1academyhome08.service.LimitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,28 +18,28 @@ public class LimitController {
     private final LimitService limitService;
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserLimitResponse> getUserLimit(@PathVariable Long userId) {
-        UserLimitResponse response = limitService.getUserLimit(userId);
+    public ResponseEntity<UserLimitResponseDTO> getUserLimit(@PathVariable Long userId) {
+        UserLimitResponseDTO response = limitService.getUserLimit(userId);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reserve")
-    public ResponseEntity<ApiResponse> reserve(@Valid @RequestBody ReserveLimitRequest request) {
+    public ResponseEntity<ApiResponseDTO> reserve(@Valid @RequestBody ReserveLimitRequestDTO request) {
 
         limitService.reserveLimit(request.userId(), request.operationId(), request.amount());
-        return ResponseEntity.ok(new ApiResponse("Limit reserved successfully", true));
+        return ResponseEntity.ok(new ApiResponseDTO("Limit reserved successfully", true));
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<ApiResponse> confirm(@Valid @RequestBody OperationActionRequest request) {
+    public ResponseEntity<ApiResponseDTO> confirm(@Valid @RequestBody OperationActionRequestDTO request) {
 
         limitService.confirmOperation(request.operationId());
-        return ResponseEntity.ok(new ApiResponse("Operation confirmed, limit deducted permanently", true));
+        return ResponseEntity.ok(new ApiResponseDTO("Operation confirmed, limit deducted permanently", true));
     }
 
     @PostMapping("/cancel")
-    public ResponseEntity<ApiResponse> cancel(@Valid @RequestBody OperationActionRequest request) {
+    public ResponseEntity<ApiResponseDTO> cancel(@Valid @RequestBody OperationActionRequestDTO request) {
         limitService.cancelOperation(request.operationId());
-        return ResponseEntity.ok(new ApiResponse("Operation cancelled, limit restored", true));
+        return ResponseEntity.ok(new ApiResponseDTO("Operation cancelled, limit restored", true));
     }
 }

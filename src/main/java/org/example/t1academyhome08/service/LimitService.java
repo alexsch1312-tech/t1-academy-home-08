@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
-import org.example.t1academyhome08.dto.UserLimitResponse;
+import org.example.t1academyhome08.dto.UserLimitResponseDTO;
 
 @Service
 public class LimitService {
@@ -25,11 +25,11 @@ public class LimitService {
     }
 
     @Transactional
-    public UserLimitResponse getUserLimit(Long userId) {
+    public UserLimitResponseDTO getUserLimit(Long userId) {
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseGet(() -> userRepository.save(new User(userId, defaultLimit, BigDecimal.ZERO)));
 
-        return new UserLimitResponse(
+        return new UserLimitResponseDTO(
                 user.getId(),
                 user.getActualLimit(),
                 user.getReservedLimit(),
@@ -98,6 +98,8 @@ public class LimitService {
     }
 
     // Использовать только при одной копии (поде), иначе ShedLock
+    //0 секунда 0 минута 0 час (полночь).***** — каждый день месяца.***** — каждый месяц.***** — любой день недели
+
     @Scheduled(
             cron = "${app.limits.cron-schedule:0 0 0 * * *}",
             zone = "${app.limits.timezone:UTC}"

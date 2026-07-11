@@ -1,6 +1,6 @@
 package org.example.t1academyhome08.exception;
 
-import org.example.t1academyhome08.dto.ApiResponse;
+import org.example.t1academyhome08.dto.ApiResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
 
     // Бизнес-ошибки
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
-    public ResponseEntity<ApiResponse> handleBusinessExceptions(RuntimeException ex) {
-        return ResponseEntity.badRequest().body(new ApiResponse(ex.getMessage(), false));
+    public ResponseEntity<ApiResponseDTO> handleBusinessExceptions(RuntimeException ex) {
+        return ResponseEntity.badRequest().body(new ApiResponseDTO(ex.getMessage(), false));
     }
 }

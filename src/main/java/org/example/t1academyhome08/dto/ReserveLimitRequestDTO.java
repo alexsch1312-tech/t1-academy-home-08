@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public record ReserveLimitRequest(
+public record ReserveLimitRequestDTO(
         @NotNull(message = "ID пользователя обязателен")
         Long userId,
 
