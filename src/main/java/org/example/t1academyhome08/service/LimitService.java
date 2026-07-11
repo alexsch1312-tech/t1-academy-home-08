@@ -97,6 +97,12 @@ public class LimitService {
         operationRepository.save(operation);
     }
 
+    @Transactional
+    public void clearAllData() {
+        operationRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
+    }
+
     // Использовать только при одной копии (поде), иначе ShedLock
     //0 секунда 0 минута 0 час (полночь).***** — каждый день месяца.***** — каждый месяц.***** — любой день недели
 

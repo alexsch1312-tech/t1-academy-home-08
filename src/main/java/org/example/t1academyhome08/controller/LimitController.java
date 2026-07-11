@@ -7,8 +7,8 @@ import org.example.t1academyhome08.dto.UserLimitResponseDTO;
 import org.example.t1academyhome08.service.LimitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1/limits")
@@ -18,28 +18,31 @@ public class LimitController {
     private final LimitService limitService;
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserLimitResponseDTO> getUserLimit(@PathVariable Long userId) {
-        UserLimitResponseDTO response = limitService.getUserLimit(userId);
-        return ResponseEntity.ok(response);
+    public UserLimitResponseDTO getUserLimit(@PathVariable Long userId) {
+        return limitService.getUserLimit(userId);
     }
 
     @PostMapping("/reserve")
-    public ResponseEntity<ApiResponseDTO> reserve(@Valid @RequestBody ReserveLimitRequestDTO request) {
-
+    public ApiResponseDTO reserve(@Valid @RequestBody ReserveLimitRequestDTO request) {
         limitService.reserveLimit(request.userId(), request.operationId(), request.amount());
-        return ResponseEntity.ok(new ApiResponseDTO("Limit reserved successfully", true));
+        return new ApiResponseDTO("Limit reserved successfully", true);
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<ApiResponseDTO> confirm(@Valid @RequestBody OperationActionRequestDTO request) {
-
+    public ApiResponseDTO confirm(@Valid @RequestBody OperationActionRequestDTO request) {
         limitService.confirmOperation(request.operationId());
-        return ResponseEntity.ok(new ApiResponseDTO("Operation confirmed, limit deducted permanently", true));
+        return new ApiResponseDTO("Operation confirmed, limit deducted permanently", true);
     }
 
     @PostMapping("/cancel")
-    public ResponseEntity<ApiResponseDTO> cancel(@Valid @RequestBody OperationActionRequestDTO request) {
+    public ApiResponseDTO cancel(@Valid @RequestBody OperationActionRequestDTO request) {
         limitService.cancelOperation(request.operationId());
-        return ResponseEntity.ok(new ApiResponseDTO("Operation cancelled, limit restored", true));
+        return new ApiResponseDTO("Operation cancelled, limit restored", true);
+    }
+
+    @DeleteMapping("/clear-all-data")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void clearTestData() {
+        limitService.clearAllData();
     }
 }

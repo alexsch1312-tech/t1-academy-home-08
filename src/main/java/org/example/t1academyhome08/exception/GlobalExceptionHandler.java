@@ -1,9 +1,10 @@
 package org.example.t1academyhome08.exception;
 
 import org.example.t1academyhome08.dto.ApiResponseDTO;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,19 +12,19 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Ошибки валидации полей DTO
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // Явно возвращаем 400 Bad Request
+    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
-        return ResponseEntity.badRequest().body(errors);
+        return errors;
     }
 
-    // Бизнес-ошибки
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
-    public ResponseEntity<ApiResponseDTO> handleBusinessExceptions(RuntimeException ex) {
-        return ResponseEntity.badRequest().body(new ApiResponseDTO(ex.getMessage(), false));
+    @ResponseStatus(HttpStatus.CONFLICT) // Для бизнес-конфликтов логично возвращать 409 Conflict вместо 400
+    public ApiResponseDTO handleBusinessExceptions(RuntimeException ex) {
+        return new ApiResponseDTO(ex.getMessage(), false);
     }
 }

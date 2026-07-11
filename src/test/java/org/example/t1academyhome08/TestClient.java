@@ -16,6 +16,8 @@ public class TestClient {
     public static void main(String[] args) {
         System.out.println("=== СТАРТ ТЕСТИРОВАНИЯ МИКРОСЕРВИСА ЛИМИТОВ ===\n");
 
+        sendDelete("/clear-all-data", "0. Очистка БД перед тестированием");
+
         sendGet("/user/999", "1.1 Получение лимита нового пользователя (ID: 999)");
         sendGet("/user/888", "1.2 Получение лимита нового пользователя (ID: 888)");
         sendGet("/user/777", "1.3 Получение лимита нового пользователя (ID: 777)");
@@ -102,6 +104,22 @@ public class TestClient {
             printResponse(response);
         } catch (Exception e) {
             System.err.println("Ошибка при выполнении POST запроса: " + e.getMessage());
+        }
+    }
+
+    private static void sendDelete(String path, String stepName) {
+        printStepHeader(stepName);
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + path))
+                    .DELETE()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("Статус код: " + response.statusCode() + " (База успешно очищена, код 204)");
+            System.out.println();
+        } catch (Exception e) {
+            System.err.println("Ошибка при очистке базы: " + e.getMessage());
         }
     }
 
