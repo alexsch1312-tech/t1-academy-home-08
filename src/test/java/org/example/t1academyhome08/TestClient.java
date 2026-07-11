@@ -16,11 +16,11 @@ public class TestClient {
     public static void main(String[] args) {
         System.out.println("=== СТАРТ ТЕСТИРОВАНИЯ МИКРОСЕРВИСА ЛИМИТОВ ===\n");
 
-        sendDelete("/clear-all-data", "0. Очистка БД перед тестированием");
+        sendRequest(buildDelete("/clear-all-data"), "0. Очистка БД перед тестированием");
 
-        sendGet("/user/999", "1.1 Получение лимита нового пользователя (ID: 999)");
-        sendGet("/user/888", "1.2 Получение лимита нового пользователя (ID: 888)");
-        sendGet("/user/777", "1.3 Получение лимита нового пользователя (ID: 777)");
+        sendRequest(buildGet("/user/999"), "1.1 Получение лимита нового пользователя (ID: 999)");
+        sendRequest(buildGet("/user/888"), "1.2 Получение лимита нового пользователя (ID: 888)");
+        sendRequest(buildGet("/user/777"), "1.3 Получение лимита нового пользователя (ID: 777)");
 
         String reserveJson = """
                 {
@@ -29,9 +29,9 @@ public class TestClient {
                     "amount": 15000.00
                 }
                 """;
-        sendPost("/reserve", reserveJson, "2. Резервирование 15 000.00 для op-777");
+        sendRequest(buildPost("/reserve", reserveJson), "2. Резервирование 15 000.00 для op-777");
 
-        sendGet("/user/999", "3. Проверка баланса после резерва");
+        sendRequest(buildGet("/user/999"), "3. Проверка баланса после резерва");
 
         String exceedJson = """
                 {
@@ -40,12 +40,12 @@ public class TestClient {
                     "amount": 90000.00
                 }
                 """;
-        sendPost("/reserve", exceedJson, "4. Попытка превысить лимит (Ожидается ошибка)");
+        sendRequest(buildPost("/reserve", exceedJson), "4. Попытка превысить лимит (Ожидается ошибка)");
 
         String confirmJson = "{\"operationId\": \"op-777\"}";
-        sendPost("/confirm", confirmJson, "5. Подтверждение операции op-777");
+        sendRequest(buildPost("/confirm", confirmJson), "5. Подтверждение операции op-777");
 
-        sendGet("/user/999", "6. Проверка баланса после подтверждения");
+        sendRequest(buildGet("/user/999"), "6. Проверка баланса после подтверждения");
 
         String rollbackReserveJson = """
                 {
@@ -54,12 +54,12 @@ public class TestClient {
                     "amount": 5000.00
                 }
                 """;
-        sendPost("/reserve", rollbackReserveJson, "7. Создание нового резерва 5 000.00 для op-888");
+        sendRequest(buildPost("/reserve", rollbackReserveJson), "7. Создание нового резерва 5 000.00 для op-888");
 
         String cancelJson = "{\"operationId\": \"op-888\"}";
-        sendPost("/cancel", cancelJson, "8. Отмена операции op-888 (Откат лимита)");
+        sendRequest(buildPost("/cancel", cancelJson), "8. Отмена операции op-888 (Откат лимита)");
 
-        sendGet("/user/999", "9. Финальная проверка баланса");
+        sendRequest(buildGet("/user/999"), "9. Финальная проверка баланса");
 
         reserveJson = """
                 {
@@ -68,69 +68,49 @@ public class TestClient {
                     "amount": -15000.00
                 }
                 """;
-        sendPost("/reserve", reserveJson, "10. Проверка валидации операции, должны быть показаны ошибки");
+        sendRequest(buildPost("/reserve", reserveJson), "10. Проверка валидации операции, должны быть показаны ошибки");
 
         confirmJson = "{\"operationId\": \"\"}";
-        sendPost("/confirm", confirmJson, "11. Проверка валидации действия над операцией, должны быть показаны ошибки");
+        sendRequest(buildPost("/confirm", confirmJson), "11. Проверка валидации действия над операцией, должны быть показаны ошибки");
 
         System.out.println("=== ТЕСТИРОВАНИЕ ЗАВЕРШЕНО ===");
     }
 
-    private static void sendGet(String path, String stepName) {
-        printStepHeader(stepName);
+    private static void sendRequest(HttpRequest request, String stepName) {
+        System.out.println("--- " + stepName + " ---");
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE_URL + path))
-                    .GET()
-                    .build();
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            printResponse(response);
-        } catch (Exception e) {
-            System.err.println("Ошибка при выполнении GET запроса: " + e.getMessage());
-        }
-    }
+            System.out.println("Статус код: " + response.statusCode());
 
-    private static void sendPost(String path, String jsonBody, String stepName) {
-        printStepHeader(stepName);
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE_URL + path))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                    .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            printResponse(response);
-        } catch (Exception e) {
-            System.err.println("Ошибка при выполнении POST запроса: " + e.getMessage());
-        }
-    }
-
-    private static void sendDelete(String path, String stepName) {
-        printStepHeader(stepName);
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE_URL + path))
-                    .DELETE()
-                    .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println("Статус код: " + response.statusCode() + " (База успешно очищена, код 204)");
+            if (!response.body().isBlank()) {
+                System.out.println("Тело ответа: " + response.body());
+            }
             System.out.println();
         } catch (Exception e) {
-            System.err.println("Ошибка при очистке базы: " + e.getMessage());
+            System.err.println("Ошибка при выполнении " + request.method() + " запроса: " + e.getMessage());
+            System.err.println();
         }
     }
 
-    private static void printStepHeader(String stepName) {
-        System.out.println("--- " + stepName + " ---");
+    private static HttpRequest buildGet(String path) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .GET()
+                .build();
     }
 
-    private static void printResponse(HttpResponse<String> response) {
-        System.out.println("Статус код: " + response.statusCode());
-        System.out.println("Тело ответа: " + response.body());
-        System.out.println();
+    private static HttpRequest buildPost(String path, String jsonBody) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+    }
+
+    private static HttpRequest buildDelete(String path) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .DELETE()
+                .build();
     }
 }
-
