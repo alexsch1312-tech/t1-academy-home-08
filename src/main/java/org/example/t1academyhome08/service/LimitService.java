@@ -108,7 +108,7 @@ public class LimitService {
 
     @Scheduled(
             cron = "${app.scheduler.cron-schedule:0 0 0 * * *}",
-            zone = "${app.scheduler.timezone:UTC}"
+            zone = "${app.scheduler.timezone:Europe/Moscow}"
     )
     @Transactional
     public void resetDailyLimits() {
